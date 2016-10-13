@@ -1,0 +1,25 @@
+<script>
+    GeofireElementsBehavior = {
+        properties: {
+            /**
+             * The Firebase app's name. If not specified, the default Firebase app will be used.
+             */
+            firebaseApp: String,
+
+            /**
+             * The root of this geofire's data inside the Firebase database.
+             */
+            root: String
+        },
+
+        /**
+         * The [GeoFire](https://github.com/firebase/geofire-js/blob/master/docs/reference.md#geofire) instance.
+         */
+        get geofire() {
+            if (!this.geofireInstance) {
+                this.geofireInstance = new GeoFire(firebase.app(this.appName).database().ref(this.root));
+            }
+            return this.geofireInstance;
+        }
+    };
+</script>

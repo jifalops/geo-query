@@ -1,0 +1,35 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="scripts.html">
+<link rel="import" href="geofire-elements-behavior.html">
+
+<!--
+`geofire-query`
+An element for working with [Geofire's queries](https://github.com/firebase/geofire-js/blob/master/docs/reference.md#geoquery).
+
+@demo demo/index.html
+-->
+
+<dom-module id="geofire-query">
+  <template>
+    <style>
+      :host {
+        /*display: block;*/
+      }
+    </style>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'geofire-query',
+
+      properties: {
+
+      },
+
+      behaviors: [
+        GeofireElementsBehavior
+      ]
+    });
+  </script>
+</dom-module>
