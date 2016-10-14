@@ -9,18 +9,40 @@
     <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
     <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
 
-    <link rel="import" href="../geofire-elements.html">
+    <link rel="import" href="../geofire-query.html">
+    <link rel="import" href="../../geo-location/geo-location.html">
+    <link rel="import" href="../../google-map/google-map.html">
+    <link rel="import" href="../../google-map/google-map-marker.html">
 
     <style is="custom-style" include="demo-pages-shared-styles">
     </style>
+    <script>
+      firebase.initializeApp({
+        apiKey: "AIzaSyD0irm8Cxx8qq1Dg7n07COfbA11_0gUsUc",
+        authDomain: "geo-fire-demo-b0bdf.firebaseapp.com",
+        databaseURL: "https://geo-fire-demo-b0bdf.firebaseio.com"
+      });
+    </script>
   </head>
   <body>
 
     <div class="vertical-section-container centered">
-      <h3>Basic geofire-elements Demo</h3>
+      <h3>Basic geofire-query Demo</h3>
       <demo-snippet>
-        <template>
-          <geofire-elements></geofire-elements>
+        <template is="dom-bind">
+          <geofire-query enabled
+                         path="geofire1"
+                         lat="[[lat]]"
+                         lng="[[lng]]"
+                         radius="1000"
+                         results-array="{{results}}"></geofire-query>
+          <google-map latitude="[[lat]]" longitude="[[lng]]" api-key="AIzaSyAUPOaJubJnaRTPUd_xX8MOA62gRtSlfCc">
+            <google-map-marker latitude="[[lat]]" longitude="[[lng]]" style="color: blue;"></google-map-marker>
+            <template is="dom-repeat" items="[[results]]">
+              <google-map-marker latitude="[[item.lat]]" longitude="[[item.lng]]"></google-map-marker>
+            </template>
+          </google-map>
+          <geo-location latitude="{{lat}}" longitude="{{lng}}"></geo-location>
         </template>
       </demo-snippet>
     </div>

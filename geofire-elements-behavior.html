@@ -4,12 +4,12 @@
             /**
              * The Firebase app's name. If not specified, the default Firebase app will be used.
              */
-            firebaseApp: String,
+            app: String,
 
             /**
-             * The root of this geofire's data inside the Firebase database.
+             * The path to this geofire's data inside the Firebase database.
              */
-            root: String
+            path: String
         },
 
         /**
@@ -17,7 +17,7 @@
          */
         get geofire() {
             if (!this.geofireInstance) {
-                this.geofireInstance = new GeoFire(firebase.app(this.appName).database().ref(this.root));
+                this.geofireInstance = new GeoFire(firebase.app(this.app).database().ref(this.path));
             }
             return this.geofireInstance;
         }
