@@ -26,16 +26,6 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
 
       properties: {
         /**
-         * The Firebase app's name. If not specified, the default Firebase app will be used.
-         */
-        app: String,
-
-        /**
-         * The path to this geofire's data inside the Firebase database.
-         */
-        path: String,
-
-        /**
          * The latitude for the query's center.
          */
         lat: Number,
@@ -57,7 +47,7 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
           type: Boolean,
           value: false,
           reflectToAttribute: true,
-          observer: '_idleChanged'
+//          observer: '_idleChanged'
         },
 
         /**
@@ -80,43 +70,24 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
       },
 
       observers: [
+        '_idleChanged(idle, _query)',
         '_queryChanged(lat, lng, radius)'
       ],
 
       behaviors: [
-//          GeofireElementsBehavior
+         GeofireElementsBehavior
       ],
 
-      /**
-       * The [GeoFire](https://github.com/firebase/geofire-js/blob/master/docs/reference.md#geofire) instance.
-       */
-      get _geofire() {
-        if (!this.geofireInstance) {
-          this.geofireInstance = new GeoFire(firebase.app(this.app).database().ref(this.path));
-        }
-        return this.geofireInstance;
-      },
-
-      /**
-       * The [GeoQuery](https://github.com/firebase/geofire-js/blob/master/docs/reference.md#geoquery) instance.
-       */
-      get _query() {
-        if (!this.queryInstance) {
-          this.queryInstance = this._geofire.query({
-            center: [this.lat, this.lng],
-            radius: this.radius
-          });
-        }
-        return this.queryInstance;
-      },
-
-      _idleChanged: function(idle) {
+      _idleChanged: function(idle, query) {
+        if (!query) return;
+        console.log('we have a query', query.center(), query.radius(), idle, query, 'app=', this.app);
         if (!idle) {
           this.resultsArray = [];
           this.resultsObject = {};
 
-
-          this.onKeyEnteredRegistration = this._query.on("key_entered", function(key, location, distance) {
+          console.log('setting listeners...');
+          this.onKeyEnteredRegistration = query.on('key_entered', function(key, location, distance) {
+            console.log('key-entered', key, location, distance);
             this.resultsObject[key] = {
               lat: location[0],
               lng: location[1],
@@ -134,7 +105,7 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
             this.fire('key-entered', data);
           }.bind(this));
 
-          this.onKeyExitedRegistration = this._query.on("key_exited", function(key, location, distance) {
+          this.onKeyExitedRegistration = query.on("key_exited", function(key, location, distance) {
             this.resultsObject[key] = null;
             for (var i = 0; i < this.resultsArray.length; i++) {
               if (this.resultsArray[i].key == key) {
@@ -151,7 +122,7 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
             });
           }.bind(this));
 
-          this.onKeyMovedRegistration = this._query.on("key_moved", function(key, location, distance) {
+          this.onKeyMovedRegistration = query.on("key_moved", function(key, location, distance) {
             this.resultsObject[key] = {
               lat: location[0],
               lng: location[1],
@@ -174,23 +145,31 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
             this.fire('key-moved', data);
           }.bind(this));
 
-          this.onReadyRegistration = this._query.on("ready", function() {
+          this.onReadyRegistration = query.on("ready", function() {
             console.log('ready');
             this.fire('ready');
           }.bind(this));
 
-        } else if (this.queryInstance) {
-          this.queryInstance.cancel();
-          this.queryInstance = null;
+        } else {
+          query.cancel();
+          query = null;
+          console.log('set query to null?', this._query === null);
         }
       },
 
       _queryChanged: function(lat, lng, radius) {
-        if ((this.lat || this.lat === 0) && (this.lng || this.lng === 0) && this.radius) {
-          this._query.updateCriteria({
+        if ((lat || lat === 0) && (lng || lng === 0) && radius) {
+          console.log('querying [', lat, lng, ']', radius, 'km');
+          var criteria = {
             center: [lat, lng],
             radius: radius
-          });
+          };
+
+          if (this._query) {
+            this._query.updateCriteria(criteria);
+          } else {
+            this._query = this._geofire.query(criteria);
+          }
         }
       }
 

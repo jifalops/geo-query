@@ -30,19 +30,60 @@
       <h3>Basic geofire-query Demo</h3>
       <demo-snippet>
         <template is="dom-bind">
-          <geofire-query enabled
+          <geofire-query id="query"
                          path="geofire1"
                          lat="[[lat]]"
                          lng="[[lng]]"
                          radius="1000"
                          results-array="{{results}}"></geofire-query>
-          <google-map latitude="[[lat]]" longitude="[[lng]]" api-key="AIzaSyAUPOaJubJnaRTPUd_xX8MOA62gRtSlfCc">
-            <google-map-marker latitude="[[lat]]" longitude="[[lng]]" style="color: blue;"></google-map-marker>
+          <button onclick="addMe()">Add Me</button>
+          <google-map latitude="[[lat]]" longitude="[[lng]]" api-key="AIzaSyAUPOaJubJnaRTPUd_xX8MOA62gRtSlfCc" style="height:300px">
+            <google-map-marker latitude="[[lat]]" longitude="[[lng]]" icon="http://maps.gstatic.com/mapfiles/ridefinder-images/mm_20_blue.png"></google-map-marker>
             <template is="dom-repeat" items="[[results]]">
               <google-map-marker latitude="[[item.lat]]" longitude="[[item.lng]]"></google-map-marker>
             </template>
           </google-map>
-          <geo-location latitude="{{lat}}" longitude="{{lng}}"></geo-location>
+          <geo-location id="location" latitude="{{lat}}" longitude="{{lng}}"></geo-location>
+
+          <script>
+            function addMe() {
+              var el = document.getElementById('location');
+              var lat = Math.round(el.latitude * 1000) / 1000;
+              var lng =  Math.round(el.longitude * 1000) / 1000;
+
+              el = document.getElementById('query');
+              var geo = el._geofire;
+              console.log(lat, lng, geo);
+              var key = 'user_' + lat + '_' + lng;
+              key = key.replace(/\./g, ',');
+              geo.set(key, [lat, lng]).then(function () {
+                      console.log('success');
+                  }, function (error) {
+                      console.log('failure', error);
+                  });
+
+
+              // TODO The first query works (key_entered).
+              // TODO The second query definition is the one I want to use but it is not working and I cannot figure out why....
+
+              var q = geo.query({
+                center: [lat, lng],
+                radius: 1000
+              });
+
+
+              // var q = el._query;
+
+              console.log('q', q, q.center(), q.radius());
+
+              q.on("key_entered", function() {
+                console.log('key entereeedddd');
+              });
+
+
+              console.log(el._geofire.ref(), geo.ref(), el.resultsArray, el.resultsObject);
+            }
+          </script>
         </template>
       </demo-snippet>
     </div>
