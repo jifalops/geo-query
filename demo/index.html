@@ -21,7 +21,7 @@
         apiKey: "AIzaSyD0irm8Cxx8qq1Dg7n07COfbA11_0gUsUc",
         authDomain: "geo-fire-demo-b0bdf.firebaseapp.com",
         databaseURL: "https://geo-fire-demo-b0bdf.firebaseio.com"
-      });
+      }, 'demo');
     </script>
   </head>
   <body>
@@ -31,12 +31,14 @@
       <demo-snippet>
         <template is="dom-bind">
           <geofire-query id="query"
+                         app="demo"
                          path="geofire1"
                          lat="[[lat]]"
                          lng="[[lng]]"
-                         radius="1000"
+                         radius="100"
                          results-array="{{results}}"></geofire-query>
           <button onclick="addMe()">Add Me</button>
+          <button onclick="queryTest()">Run Query Test</button>
           <google-map latitude="[[lat]]" longitude="[[lng]]" api-key="AIzaSyAUPOaJubJnaRTPUd_xX8MOA62gRtSlfCc" style="height:300px">
             <google-map-marker latitude="[[lat]]" longitude="[[lng]]" icon="http://maps.gstatic.com/mapfiles/ridefinder-images/mm_20_blue.png"></google-map-marker>
             <template is="dom-repeat" items="[[results]]">
@@ -48,40 +50,49 @@
           <script>
             function addMe() {
               var el = document.getElementById('location');
-              var lat = Math.round(el.latitude * 1000) / 1000;
-              var lng =  Math.round(el.longitude * 1000) / 1000;
+              var lat = Math.round(el.latitude * 100) / 100;
+              var lng =  Math.round(el.longitude * 100) / 100;
+              var geo = document.getElementById('query')._geofire;
+              // console.log(lat, lng, geo);
 
-              el = document.getElementById('query');
-              var geo = el._geofire;
-              console.log(lat, lng, geo);
               var key = 'user_' + lat + '_' + lng;
               key = key.replace(/\./g, ',');
               geo.set(key, [lat, lng]).then(function () {
-                      console.log('success');
-                  }, function (error) {
-                      console.log('failure', error);
-                  });
+                  console.log('success');
+                }, function (error) {
+                  console.log('failure', error);
+                });
+            }
 
+            function queryTest() {
+              var el = document.getElementById('location');
+              var lat = Math.round(el.latitude * 100) / 100;
+              var lng =  Math.round(el.longitude * 100) / 100;
 
-              // TODO The first query works (key_entered).
-              // TODO The second query definition is the one I want to use but it is not working and I cannot figure out why....
+              el = document.getElementById('query');
+              var geo = el._geofire;
+              var query = el._query;
 
-              var q = geo.query({
+              console.log('query:', query, query.center(), query.radius());
+
+              //Not working
+              query.on("key_entered", function(key, loc, dist) {
+                console.log('<geofire-query> key_entered', key, loc, dist);
+              });
+
+              // Works for some reason --- it was working, i swear
+              var newGeo = new GeoFire(firebase.app('demo').database().ref('geofire1'));
+              var newQuery = newGeo.query({
                 center: [lat, lng],
                 radius: 1000
               });
-
-
-              // var q = el._query;
-
-              console.log('q', q, q.center(), q.radius());
-
-              q.on("key_entered", function() {
-                console.log('key entereeedddd');
+              console.log('new query:', newQuery, newQuery.center(), newQuery.radius());
+              newQuery.on("key_entered", function(key, loc, dist) {
+                console.log('newQuery key_entered', key, loc, dist);
               });
-
-
-              console.log(el._geofire.ref(), geo.ref(), el.resultsArray, el.resultsObject);
+              newQuery.on("ready", function() {
+                console.log('newQuery ready');
+              });
             }
           </script>
         </template>
