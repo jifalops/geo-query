@@ -28,7 +28,6 @@
          */
         get _geofire() {
             if (!this.geofireInstance) {
-                console.log('init geofire. app=', this.app, 'path=', this.path);
                 this.geofireInstance = new GeoFire(firebase.app(this.app).database().ref(this.path));
             }
             return this.geofireInstance;

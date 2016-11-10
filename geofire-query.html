@@ -11,14 +11,6 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
 -->
 
 <dom-module id="geofire-query">
-  <template>
-    <style>
-      :host {
-        /*display: block;*/
-      }
-    </style>
-  </template>
-
   <script>
     Polymer({
 
@@ -80,20 +72,24 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
 
       _idleChanged: function(idle, query) {
         if (!query) return;
-        console.log('we have a query', query.center(), query.radius(), idle, query, 'app=', this.app);
         if (!idle) {
+
           this.resultsArray = [];
           this.resultsObject = {};
 
-          console.log('setting listeners...');
+          // Key entered event
           this.onKeyEnteredRegistration = query.on('key_entered', function(key, location, distance) {
-            console.log('key-entered', key, location, distance);
+
+            // Object changes
             this.resultsObject[key] = {
               lat: location[0],
               lng: location[1],
               location: location,
               distance: distance
             };
+            this.notifyPath('resultsObject.' + key);
+
+            // Array changes
             var data = {
               key: key,
               lat: location[0],
@@ -101,18 +97,26 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
               location: location,
               distance: distance
             };
-            this.resultsArray.push(data);
+            this.push('resultsArray', data);
+
             this.fire('key-entered', data);
           }.bind(this));
 
+          // Key exited event
           this.onKeyExitedRegistration = query.on("key_exited", function(key, location, distance) {
+
+            // Object changes
             this.resultsObject[key] = null;
+            this.notifyPath('resultsObject.' + key);
+
+            // Array changes
             for (var i = 0; i < this.resultsArray.length; i++) {
               if (this.resultsArray[i].key == key) {
-                this.resultsArray.splice(i, 1);
+                this.splice('resultsArray', i, 1);
                 break;
               }
             }
+
             this.fire('key-exited', {
               key: key,
               lat: location[0],
@@ -122,13 +126,19 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
             });
           }.bind(this));
 
+          // Key moved event
           this.onKeyMovedRegistration = query.on("key_moved", function(key, location, distance) {
+
+            // Object changes
             this.resultsObject[key] = {
               lat: location[0],
               lng: location[1],
               location: location,
               distance: distance
             };
+            this.notifyPath('resultsObject.' + key);
+
+            // Array changes
             var data = {
               key: key,
               lat: location[0],
@@ -139,32 +149,39 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
             for (var i = 0; i < this.resultsArray.length; i++) {
               if (this.resultsArray[i].key == key) {
                 this.resultsArray[i] = data;
+                this.notifyPath('resultsArray.' + i);
                 break;
               }
             }
+
             this.fire('key-moved', data);
           }.bind(this));
 
+          // Ready event
           this.onReadyRegistration = query.on("ready", function() {
-            console.log('ready');
             this.fire('ready');
           }.bind(this));
 
         } else {
+          // The query is idle, cancel event listeners and set the query to null
+          // so that it can be reused.
           query.cancel();
           query = null;
-          console.log('set query to null?', this._query === null);
+
+          // This shouldn't be needed, but just in case.
+          if (this._query) {
+            this._query.cancel();
+            this._query = null;
+          }
         }
       },
 
       _queryChanged: function(lat, lng, radius) {
         if ((lat || lat === 0) && (lng || lng === 0) && radius) {
-          console.log('querying [', lat, lng, ']', radius, 'km');
           var criteria = {
             center: [lat, lng],
             radius: radius
           };
-
           if (this._query) {
             this._query.updateCriteria(criteria);
           } else {
