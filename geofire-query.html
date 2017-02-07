@@ -1,6 +1,5 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="scripts.html">
-<link rel="import" href="geofire-elements-behavior.html">
 
 <!--
 `geofire-query`
@@ -17,6 +16,14 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
       is: 'geofire-query',
 
       properties: {
+        /**
+         * The Geofire instance this query will use
+         */
+        geofire: {
+          type: Object,
+          value: null
+        },
+
         /**
          * The latitude for the query's center.
          */
@@ -62,20 +69,20 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
       },
 
       observers: [
-        '_idleChanged(idle, _query)',
-        '_queryChanged(lat, lng, radius)'
-      ],
-
-      behaviors: [
-         GeofireElementsBehavior
+        '_idleChanged(idle, query)',
+        '_queryChanged(geofire, lat, lng, radius)'
       ],
 
       _idleChanged: function(idle, query) {
         if (!query) return;
         if (!idle) {
 
-          this.resultsArray = [];
+
           this.resultsObject = {};
+          this.resultsArray = [];
+
+          this.notifyPath('resultsObject');
+          this.notifyPath('resultsArray');
 
           // Key entered event
           this.onKeyEnteredRegistration = query.on('key_entered', function(key, location, distance) {
@@ -169,23 +176,23 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
           query = null;
 
           // This shouldn't be needed, but just in case.
-          if (this._query) {
-            this._query.cancel();
-            this._query = null;
+          if (this.query) {
+            this.query.cancel();
+            this.query = null;
           }
         }
       },
 
-      _queryChanged: function(lat, lng, radius) {
+      _queryChanged: function(geofire, lat, lng, radius) {
         if ((lat || lat === 0) && (lng || lng === 0) && radius) {
           var criteria = {
             center: [lat, lng],
             radius: radius
           };
-          if (this._query) {
-            this._query.updateCriteria(criteria);
-          } else {
-            this._query = this._geofire.query(criteria);
+          if (this.query) {
+            this.query.updateCriteria(criteria);
+          } else if (geofire) {
+            this.query = geofire.query(criteria);
           }
         }
       }
