@@ -1,19 +1,18 @@
 <link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="scripts.html">
+<link rel="import" href="geofire-import.html">
 
 <!--
-`geofire-query`
+`geo-query`
 An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/geofire-js/blob/master/docs/reference.md#geoquery)s.
 
-@polymerBehavior GeofireElementsBehavior
 @demo demo/index.html
 -->
 
-<dom-module id="geofire-query">
+<dom-module id="geo-query">
   <script>
     Polymer({
 
-      is: 'geofire-query',
+      is: 'geo-query',
 
       properties: {
         /**
@@ -46,7 +45,7 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
           type: Boolean,
           value: false,
           reflectToAttribute: true,
-//          observer: '_idleChanged'
+        //          observer: '_idleChanged'
         },
 
         /**
@@ -65,27 +64,31 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
         resultsObject: {
           type: Object,
           notify: true
+        },
+
+        /**
+         * Whether to log events to the console.
+         */
+        log: {
+          type: Boolean,
+          value: false,
+          reflectToAttribute: true
         }
       },
-
       observers: [
         '_idleChanged(idle, query)',
-        '_queryChanged(geofire, lat, lng, radius)'
+        '_queryChanged(geofire, lat, lng, radius, idle)'
       ],
-
       _idleChanged: function(idle, query) {
         if (!query) return;
         if (!idle) {
 
-
           this.resultsObject = {};
           this.resultsArray = [];
 
-          this.notifyPath('resultsObject');
-          this.notifyPath('resultsArray');
-
           // Key entered event
           this.onKeyEnteredRegistration = query.on('key_entered', function(key, location, distance) {
+            this.log && console.log('key-entered', key, location, distance);
 
             // Object changes
             this.resultsObject[key] = {
@@ -94,7 +97,6 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
               location: location,
               distance: distance
             };
-            this.notifyPath('resultsObject.' + key);
 
             // Array changes
             var data = {
@@ -111,10 +113,10 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
 
           // Key exited event
           this.onKeyExitedRegistration = query.on("key_exited", function(key, location, distance) {
+            this.log && console.log('key-exited', key, location, distance);
 
             // Object changes
             this.resultsObject[key] = null;
-            this.notifyPath('resultsObject.' + key);
 
             // Array changes
             for (var i = 0; i < this.resultsArray.length; i++) {
@@ -135,6 +137,7 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
 
           // Key moved event
           this.onKeyMovedRegistration = query.on("key_moved", function(key, location, distance) {
+            this.log && console.log('key-moved', key, location, distance);
 
             // Object changes
             this.resultsObject[key] = {
@@ -143,7 +146,6 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
               location: location,
               distance: distance
             };
-            this.notifyPath('resultsObject.' + key);
 
             // Array changes
             var data = {
@@ -156,7 +158,6 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
             for (var i = 0; i < this.resultsArray.length; i++) {
               if (this.resultsArray[i].key == key) {
                 this.resultsArray[i] = data;
-                this.notifyPath('resultsArray.' + i);
                 break;
               }
             }
@@ -166,32 +167,48 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
 
           // Ready event
           this.onReadyRegistration = query.on("ready", function() {
+            this.log && console.log('ready');
+            var tmp = this.resultsArray;
+            this.resultsArray = [];
+            this.resultsArray = tmp;
+            tmp = this.resultsObject;
+            this.resultsObject = {};
+            this.resultsObject = tmp;
             this.fire('ready');
           }.bind(this));
 
         } else {
-          // The query is idle, cancel event listeners and set the query to null
-          // so that it can be reused.
-          query.cancel();
-          query = null;
-
-          // This shouldn't be needed, but just in case.
-          if (this.query) {
-            this.query.cancel();
-            this.query = null;
-          }
+          this.cancel();
         }
       },
 
-      _queryChanged: function(geofire, lat, lng, radius) {
+      /**
+       * Cancel event listeners and set the query to null so it can be reused.
+       */
+      cancel: function() {
+        if (this.query) {
+          this.log && console.log('Canceling query and resetting to null');
+          this.query.cancel();
+          this.query = null;
+        } else {
+          this.log && console.log('No query to cancel, resetting to null.');
+          this.query = null;
+        }
+      },
+
+      _queryChanged: function(geofire, lat, lng, radius, idle) {
+        if (idle) return;
         if ((lat || lat === 0) && (lng || lng === 0) && radius) {
           var criteria = {
-            center: [lat, lng],
-            radius: radius
+            center: [Number(lat), Number(lng)],
+            radius: Number(radius)
           };
+          this.log && console.log('criteria changed:', criteria);
           if (this.query) {
-            this.query.updateCriteria(criteria);
-          } else if (geofire) {
+            // this.query.updateCriteria(criteria);
+            this.cancel();
+          } else
+          if (geofire) {
             this.query = geofire.query(criteria);
           }
         }
@@ -232,5 +249,5 @@ An element for working with GeoFire's [`GeoQuery`](https://github.com/firebase/g
        * @event ready
        */
     });
-  </script>
-</dom-module>
+    </script>
+  </dom-module>

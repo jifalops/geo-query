@@ -1,245 +1,151 @@
 <!doctype html>
 <html>
   <head>
-    <title>geofire-elements demo</title>
+    <title>geo-query demo</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
     <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
 
     <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
     <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../../paper-checkbox/paper-checkbox.html">
 
-    <link rel="import" href="../scripts.html">
-    <link rel="import" href="../geofire-query.html">
-    <link rel="import" href="../../geo-location/geo-location.html">
-    <link rel="import" href="../../geo-codec/geo-codec.html">
-    <link rel="import" href="../../geo-query-input/geo-query-input.html">
-    <link rel="import" href="../../google-map/google-map.html">
-    <link rel="import" href="../../google-map/google-map-marker.html">
+    <link rel="import" href="../geo-query.html">
 
     <style is="custom-style" include="demo-pages-shared-styles">
     </style>
+    <script src="../../firebase/firebase.js"></script>
     <script>
       firebase.initializeApp({
         apiKey: "AIzaSyD0irm8Cxx8qq1Dg7n07COfbA11_0gUsUc",
         authDomain: "geo-fire-demo-b0bdf.firebaseapp.com",
         databaseURL: "https://geo-fire-demo-b0bdf.firebaseio.com"
       });
+      var geofireDbRef = firebase.app().database().ref('geofire1');
     </script>
   </head>
   <body>
-
     <div class="vertical-section-container centered">
-      <h3>Basic geofire-query Demo, using the results array</h3>
+      <div id="allEntries" style="font-size: small;"></div>
+      <script>
+        firebase.app().database().ref('geofire1').on('value', function(snapshot) {
+          var allEntries = snapshot.val();
+          var div = document.getElementById('allEntries');
+          div.innerHTML = 'Max ' + Object.keys(allEntries).length + ' results are possible.<br>';
+          for (var e in allEntries) {
+            div.innerHTML += '[' + coordsFromKey(e) + ']<br>';
+          }
+        });
+        function coordsFromKey(key) {
+          // key = "user_lat_lng" with commas instead of decimal points.
+          var lngStart = key.indexOf('_', 5) + 1;
+          return [ key.substring(5, lngStart - 1).replace(',', '.'),
+                   key.substring(lngStart).replace(',', '.')];
+        }
+        function stringify(result) {
+          return '[' + result.location + '] (' + Math.round(result.distance) + ' km)';
+        }
+        function objectToArray(o) {
+          var a = [];
+          for (var k in o) {
+            if (o.hasOwnProperty(k)) {
+              a.push({
+                key: k,
+                val: o[k]
+              });
+            }
+          }
+          return a;
+        }
+      </script>
+
+      <h4>Check the console for additional output.</h4>
+
+      <h3>Demo 1: Using the results-array and results-object</h3>
       <demo-snippet>
         <template is="dom-bind" id="scope1">
-          <geo-location latitude="{{lat}}" longitude="{{lng}}"></geo-location>
-
-          <geofire-query
-            id="query"
+          <input placeholder="latitude" value="{{lat::input}}"/><br />
+          <input placeholder="longitude" value="{{lng::input}}"/><br />
+          <input placeholder="radius (km)" value="{{rad::input}}"/><br />
+          <paper-checkbox checked="{{idle}}">Idle</paper-checkbox><br />
+          <geo-query log
             geofire="[[geofire]]"
+            idle$="[[idle]]"
             lat="[[lat]]"
             lng="[[lng]]"
-            radius="1000"
-            results-array="{{results}}"></geofire-query>
-
-          <button onclick="addMe()" style="margin: 8px 0; padding: 4px 8px;">Add Me</button>
-
-          <google-map
-            latitude="[[lat]]"
-            longitude="[[lng]]"
-            api-key="AIzaSyAUPOaJubJnaRTPUd_xX8MOA62gRtSlfCc"
-            style="height:300px"
-            fit-to-marker
-            disable-street-view-control>
-            <google-map-marker
-              latitude="[[lat]]"
-              longitude="[[lng]]"
-              icon="http://maps.gstatic.com/mapfiles/ridefinder-images/mm_20_blue.png"
-              title="You"></google-map-marker>
-            <template is="dom-repeat" items="[[results]]">
-              <google-map-marker latitude="[[item.lat]]" longitude="[[item.lng]]" title="[[item.distance]] km">
-                <div>[[[item.lat]], [[item.lng]]]</div>
-                <div>[[item.distance]] km</div>
-              </google-map-marker>
-            </template>
-          </google-map>
-
+            radius="[[rad]]"
+            results-array="{{resultsArray}}"
+            results-object="{{resultsObject}}">
+          </geo-query>
+          <div>[[resultsArray.length]] results.</div>
+          <div>Results array:</div>
+          <template is="dom-repeat" items="[[resultsArray]]">
+            <div>[[_resultToString(item)]]</div>
+          </template>
+          <br><div>Results object:</div>
+          <template is="dom-repeat" items="[[_objectToArray(resultsObject)]]">
+            <div>[[_resultToString(item.val)]]</div>
+          </template>
           <script>
-            var scope = document.getElementById('scope1');
-            scope.geofire = new GeoFire(firebase.app().database().ref('geofire1'));
+            var scope1 = document.getElementById('scope1');
+            scope1.geofire = new GeoFire(geofireDbRef);
+            scope1._resultToString = function(result) { return stringify(result); };
+            scope1._objectToArray = function(obj) { return objectToArray(obj); };
+          </script>
+        </template>
+      </demo-snippet>
 
-            function addMe() {
-              var scope = document.getElementById('scope1');
-              // one decimal place ~= 11.1 km
-              // two decimal places ~= 1.1 km
-              var lat = Math.round(scope.lat * 10) / 10;
-              var lng =  Math.round(scope.lng * 10) / 10;
-
-              var key = ('user_' + lat + '_' + lng).replace(/\./g, ',');
-              scope.geofire.set(key, [lat, lng]).then(function () {
-                  console.log('success');
-                }, function (error) {
-                  console.log('failure', error);
-                });
+      <h3>Demo 2: Using the events</h3>
+      <demo-snippet>
+        <template is="dom-bind" id="scope2">
+          <input placeholder="latitude" value="{{lat::input}}"/><br />
+          <input placeholder="longitude" value="{{lng::input}}"/><br />
+          <input placeholder="radius (km)" value="{{rad::input}}"/><br />
+          <paper-checkbox checked="{{idle}}">Idle</paper-checkbox><br />
+          <button on-tap="cancel">Cancel</button><br />
+          <geo-query log
+            id="query"
+            geofire="[[geofire]]"
+            idle$="[[idle]]"
+            lat="[[lat]]"
+            lng="[[lng]]"
+            radius="[[rad]]"
+            on-key-entered="_onKeyEntered"
+            on-key-exited="_onKeyExited"
+            on-key-moved="_onKeyMoved"
+            on-ready="_onReady">
+          </geo-query>
+          <div>[[results.length]] results.</div>
+          <template is="dom-repeat" items="[[results]]">
+            <div>[[_resultToString(item)]]</div>
+          </template>
+          <div>Events received:</div>
+          <template is="dom-repeat" items="[[events]]">
+            <div>[[item]]</div>
+          </template>
+          <script>
+            var scope2 = document.getElementById('scope2');
+            scope2.geofire = new GeoFire(geofireDbRef);
+            scope2.events = [];
+            scope2._resultToString = function(result) { return stringify(result); };
+            scope2._onKeyEntered = function(key, lat, lng, location, distance) {
+              this.push('events', 'key-entered: ' + key + ' (' + Math.round(distance) + ' km)');
+            };
+            scope2._onKeyExited = function(key, lat, lng, location, distance) {
+              this.push('events', 'key-exited: ' + key + ' (' + Math.round(distance) + ' km)');
+            };
+            scope2._onKeyMoved = function(key, lat, lng, location, distance) {
+              this.push('events', 'key-moved: ' + key + ' (' + Math.round(distance) + ' km)');
+            };
+            scope2._onReady = function() {
+              this.results = this.$.query.resultsArray;
+            };
+            scope2.cancel = function() {
+              this.$.query.cancel();
             }
           </script>
         </template>
       </demo-snippet>
-
-      <h3>Using the results object</h3>
-      <demo-snippet>
-        <template is="dom-bind" id="scope2">
-          <geo-location latitude="{{lat}}" longitude="{{lng}}"></geo-location>
-
-          <geofire-query
-            geofire="[[geofire]]"
-            lat="[[lat]]"
-            lng="[[lng]]"
-            radius="1000"
-            results-object="{{results}}"></geofire-query>
-
-          <google-map
-            latitude="[[lat]]"
-            longitude="[[lng]]"
-            api-key="AIzaSyAUPOaJubJnaRTPUd_xX8MOA62gRtSlfCc"
-            style="height:300px"
-            fit-to-marker
-            disable-street-view-control>
-            <google-map-marker
-              latitude="[[lat]]"
-              longitude="[[lng]]"
-              icon="http://maps.gstatic.com/mapfiles/ridefinder-images/mm_20_blue.png"
-              title="You"></google-map-marker>
-            <template is="dom-repeat" items="[[flatten(results.*)]]">
-              <google-map-marker latitude="[[item.lat]]" longitude="[[item.lng]]" title="[[item.distance]] km">
-                <div>[[[item.lat]], [[item.lng]]]</div>
-                <div>[[item.distance]] km</div>
-              </google-map-marker>
-            </template>
-          </google-map>
-
-          <script>
-            var scope = document.getElementById('scope2');
-            scope.geofire = new GeoFire(firebase.app().database().ref('geofire1'));
-            scope.flatten = function(objChange) {
-              var array = [], val;
-              for (var key in objChange.base) {
-                val = {};
-                val.key = key;
-                val.lat = objChange.base[key].lat;
-                val.lng = objChange.base[key].lng;
-                val.distance = objChange.base[key].distance;
-                array.push(val);
-              }
-              return array;
-            };
-          </script>
-        </template>
-      </demo-snippet>
-
-      <h3>Using the events</h3>
-      <demo-snippet>
-        <template is="dom-bind" id="scope3">
-          <geo-location latitude="{{lat}}" longitude="{{lng}}"></geo-location>
-
-          <geofire-query
-            geofire="[[geofire]]"
-            lat="[[lat]]"
-            lng="[[lng]]"
-            radius="1000"
-            on-key-entered="keyEntered"></geofire-query>
-
-          <google-map
-            latitude="[[lat]]"
-            longitude="[[lng]]"
-            api-key="AIzaSyAUPOaJubJnaRTPUd_xX8MOA62gRtSlfCc"
-            style="height:300px"
-            fit-to-marker
-            disable-street-view-control>
-            <google-map-marker
-              latitude="[[lat]]"
-              longitude="[[lng]]"
-              icon="http://maps.gstatic.com/mapfiles/ridefinder-images/mm_20_blue.png"
-              title="You"></google-map-marker>
-            <template is="dom-repeat" items="[[results]]">
-              <google-map-marker latitude="[[item.lat]]" longitude="[[item.lng]]" title="[[item.distance]] km">
-                <div>[[[item.lat]], [[item.lng]]]</div>
-                <div>[[item.distance]] km</div>
-              </google-map-marker>
-            </template>
-          </google-map>
-
-          <script>
-            var scope = document.getElementById('scope3');
-            scope.geofire = new GeoFire(firebase.app().database().ref('geofire1'));
-            scope.keyEntered = function(e, data) {
-              if (!scope.results) scope.results = [];
-              scope.push('results', data);
-            };
-          </script>
-        </template>
-      </demo-snippet>
-
-
-      <h3>User input query parameters</h3>
-      <demo-snippet>
-        <template is="dom-bind" id="scope4">
-          <geo-location latitude="{{userLat}}" longitude="{{userLng}}"></geo-location>
-
-          <geo-query-input use-current-location metric radius-options=[[radii]] radius="500" on-query-changed="queryChanged"></geo-query-input>
-          <geo-codec id="codec" api-key="AIzaSyAUPOaJubJnaRTPUd_xX8MOA62gRtSlfCc"></geo-codec>
-
-          <geofire-query
-            id="query"
-            geofire="[[geofire]]"
-            lat="[[lat]]"
-            lng="[[lng]]"
-            radius="[[radiusKm]]"
-            results-array="{{results}}"></geofire-query>
-
-          <google-map
-            latitude="[[lat]]"
-            longitude="[[lng]]"
-            api-key="AIzaSyAUPOaJubJnaRTPUd_xX8MOA62gRtSlfCc"
-            style="height:300px"
-            fit-to-marker
-            disable-street-view-control>
-            <google-map-marker
-              latitude="[[lat]]"
-              longitude="[[lng]]"
-              icon="http://maps.gstatic.com/mapfiles/ridefinder-images/mm_20_blue.png"
-              title="Search center"></google-map-marker>
-            <template is="dom-repeat" items="[[results]]">
-              <google-map-marker latitude="[[item.lat]]" longitude="[[item.lng]]" title="[[item.distance]] km">
-                <div>[[[item.lat]], [[item.lng]]]</div>
-                <div>[[item.distance]] km</div>
-              </google-map-marker>
-            </template>
-          </google-map>
-
-          <script>
-            var scope = document.getElementById('scope4');
-            scope.geofire = new GeoFire(firebase.app().database().ref('geofire1'));
-            scope.radii = [100, 250, 500, 999];
-            scope.queryChanged = function(e, data) {
-              console.log('Query changed', data);
-              scope.radiusKm = data.radiusKm;
-              if (data.useCurrentLocation) {
-                scope.lat = scope.userLat;
-                scope.lng = scope.userLng;
-              } else {
-                var el = document.getElementById('codec');
-                el.geocode(data.location, function (address, lat, lng, place) {
-                  scope.lat = lat;
-                  scope.lng = lng;
-                });
-              }
-            };
-          </script>
-        </template>
-      </demo-snippet>
     </div>
-
   </body>
 </html>
