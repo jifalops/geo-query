@@ -7,6 +7,8 @@ A Polymer web component wrapper for GeoFire's GeoQuery.
 
 ```
 bower install --save geo-query
+bower i -S geo-query        # Polymer 2.0 hybrid (1.x compatible)
+bower i -S geo-query#0.3.1  # Polymer 1.x based
 ```
 
 ## Usage
@@ -19,7 +21,7 @@ bower install --save geo-query
 ```
 <custom-element-demo>
   <template is="dom-bind" id="scope">
-    <script src="../webcomponentsjs/webcomponents-lite.js"></script>    
+    <script src="../webcomponentsjs/webcomponents-lite.js"></script>
     <link rel="import" href="geo-query.html">
     <script src="../../firebase/firebase.js"></script>
     <script>
@@ -43,7 +45,7 @@ bower install --save geo-query
 <input placeholder="latitude" value="{{lat::input}}"/><br />
 <input placeholder="longitude" value="{{lng::input}}"/><br />
 <input placeholder="radius (km)" value="{{rad::input}}"/><br />
-<geo-query   
+<geo-query
   geofire="[[geofire]]"
   lat="[[lat]]"
   lng="[[lng]]"
@@ -66,7 +68,6 @@ Full demo:
 | [github](https://jifalops.github.io/geo-query/components/geo-query/demo/).
 
 API: [webcomponents.org](https://www.webcomponents.org/element/jifalops/geo-query/geo-query)
-| [github](https://jifalops.github.io/geo-query).
 
 
 ## Contributing
