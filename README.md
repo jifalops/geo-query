@@ -17,6 +17,7 @@ bower i -S geo-query#0.3.1  # Polymer 1.x based
 * Either use the `resultsArray`, `resultsObject`, or listen for events.
 
 ## Demo
+<i style="font-size: small;">Polymer bindings may not work in this readme demo.</i>
 <!--
 ```
 <custom-element-demo>
