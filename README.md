@@ -12,56 +12,59 @@ bower i -S geo-query#0.3.1  # Polymer 1.x based
 ```
 
 ## Usage
-* Pass it a GeoFire instance that references your database.
-* Specify the center point and search radius.
-* Either use the `resultsArray`, `resultsObject`, or listen for events.
+* Set `app-name` and `path` (just like on polymerfire elements) to define the
+  geofire instance.
+* Set `lat`, `lng`, and `radius` to search for entries in an area.
+
 
 ## Demo
-<i style="font-size: small;">Polymer bindings may not work in this readme demo.</i>
 <!--
 ```
 <custom-element-demo>
   <template is="dom-bind" id="scope">
     <script src="../webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="../paper-checkbox/paper-checkbox.html">
     <link rel="import" href="geo-query.html">
-    <script src="../../firebase/firebase.js"></script>
-    <script>
-      firebase.initializeApp({
-        apiKey: "AIzaSyD0irm8Cxx8qq1Dg7n07COfbA11_0gUsUc",
-        authDomain: "geo-fire-demo-b0bdf.firebaseapp.com",
-        databaseURL: "https://geo-fire-demo-b0bdf.firebaseio.com"
-      });
-      var geofireDbRef = firebase.app().database().ref('geofire1');
-      function resultToString(result) {
-        return '[' + result.location + '] (' + Math.round(result.distance) + ' km)';
-      }
-    </script>
-    <next-code-block></next-code-block>
+    <div>
+      <dom-bind>
+        <template>
+          <firebase-app
+            api-key="AIzaSyD0irm8Cxx8qq1Dg7n07COfbA11_0gUsUc"
+            auth-domain="geo-fire-demo-b0bdf.firebaseapp.com"
+            database-url="https://geo-fire-demo-b0bdf.firebaseio.com">
+          </firebase-app>
+          <next-code-block></next-code-block>
+          <h4>Search</h4>
+          <input placeholder="latitude" value="{{lat::input}}"/><br />
+          <input placeholder="longitude" value="{{lng::input}}"/><br />
+          <input placeholder="radius (km)" value="{{rad::input}}"/><br />
+          <paper-checkbox checked="{{disabled}}">Disable</paper-checkbox><br />
+          <p>[[results.length]] results.</p>
+          <table>
+            <dom-repeat items="[[results]]">
+              <template>
+                <tr><td>[[item.location.0]]</td><td>[[item.location.1]]</td><td>[[item.distance]] km</td></tr>
+              </template>
+            </dom-repeat>
+          </table>
+        </template>
+      </dom-bind>
+    </div>
   </template>
 </custom-element-demo>
 ```
 -->
 
 ```html
-<input placeholder="latitude" value="{{lat::input}}"/><br />
-<input placeholder="longitude" value="{{lng::input}}"/><br />
-<input placeholder="radius (km)" value="{{rad::input}}"/><br />
-<geo-query
-  geofire="[[geofire]]"
+<geo-query log
+  path="/geofire1"
+  data="{{results}}"
   lat="[[lat]]"
   lng="[[lng]]"
   radius="[[rad]]"
-  results-array="{{resultsArray}}">
+  disabled="[[disabled]]">
 </geo-query>
-<div>[[resultsArray.length]] results.</div>
-<template is="dom-repeat" items="[[resultsArray]]">
-  <div>[[_resultToString(item)]]</div>
-</template>
-<script>
-  var scope = document.getElementById('scope');
-  scope.geofire = new GeoFire(geofireDbRef);
-  scope._resultToString = function(result) { return resultToString(result); };
-</script>
+
 ```
 
 Full demo:
@@ -69,6 +72,15 @@ Full demo:
 | [github](https://jifalops.github.io/geo-query/components/geo-query/demo/).
 
 API: [webcomponents.org](https://www.webcomponents.org/element/jifalops/geo-query/geo-query)
+
+## Breaking changes
+*0.4 -> 1.0*
+
+* `geo-query` now implements `polymerfire/FirebaseDatabaseBehavior`
+* `idle` has been renamed to `disabled`
+* `geofire` is now a computed property which depends on `app-name` (optional) and `path`.
+* Use `data` (optionally combined with `asObject`) in place of the old `resultsArray` and
+  `resultsObject` properties.
 
 
 ## Contributing

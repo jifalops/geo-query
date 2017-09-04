@@ -8,150 +8,73 @@
 
     <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
     <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../../polymerfire/firebase-app.html">
+    <link rel="import" href="../../polymerfire/firebase-query.html">
     <link rel="import" href="../../paper-checkbox/paper-checkbox.html">
 
     <link rel="import" href="../geo-query.html">
 
     <custom-style>
       <style include="demo-pages-shared-styles">
+        td {
+          min-width: 6em;
+        }
       </style>
     </custom-style>
-    <script src="../../firebase/firebase.js"></script>
-    <script>
-      firebase.initializeApp({
-        apiKey: "AIzaSyD0irm8Cxx8qq1Dg7n07COfbA11_0gUsUc",
-        authDomain: "geo-fire-demo-b0bdf.firebaseapp.com",
-        databaseURL: "https://geo-fire-demo-b0bdf.firebaseio.com"
-      });
-      var geofireDbRef = firebase.app().database().ref('geofire1');
-    </script>
   </head>
   <body>
     <div class="vertical-section-container centered">
-      <div id="allEntries" style="font-size: small;"></div>
-      <script>
-        firebase.app().database().ref('geofire1').on('value', function(snapshot) {
-          var allEntries = snapshot.val();
-          var div = document.getElementById('allEntries');
-          div.innerHTML = 'Max ' + Object.keys(allEntries).length + ' results are possible.<br>';
-          for (var e in allEntries) {
-            div.innerHTML += '[' + coordsFromKey(e) + ']<br>';
-          }
-        });
-        function coordsFromKey(key) {
-          // key = "user_lat_lng" with commas instead of decimal points.
-          var lngStart = key.indexOf('_', 5) + 1;
-          return [ key.substring(5, lngStart - 1).replace(',', '.'),
-                   key.substring(lngStart).replace(',', '.')];
-        }
-        function stringify(result) {
-          return '[' + result.location + '] (' + Math.round(result.distance) + ' km)';
-        }
-        function objectToArray(o) {
-          var a = [];
-          for (var k in o) {
-            if (o.hasOwnProperty(k)) {
-              a.push({
-                key: k,
-                val: o[k]
-              });
-            }
-          }
-          return a;
-        }
-      </script>
-
       <h4>Check the console for additional output.</h4>
 
-      <h3>Demo 1: Using the results-array and results-object</h3>
+      <h3>Demo 1: Using `data` as an array</h3>
       <demo-snippet>
-        <dom-bind id="scope1">
+        <dom-bind>
           <template>
+            <firebase-app
+              api-key="AIzaSyD0irm8Cxx8qq1Dg7n07COfbA11_0gUsUc"
+              auth-domain="geo-fire-demo-b0bdf.firebaseapp.com"
+              database-url="https://geo-fire-demo-b0bdf.firebaseio.com">
+            </firebase-app>
+            <firebase-query
+              path="/geofire1"
+              data="{{entries}}">
+            </firebase-query>
+
+            <h4>All entries ([[entries.length]])</h4>
+            <table>
+              <dom-repeat items="[[entries]]">
+                <template>
+                  <tr><td>[[item.l.0]]</td><td>[[item.l.1]]</td></tr>
+                </template>
+              </dom-repeat>
+            </table>
+
+            <h4>Search</h4>
             <input placeholder="latitude" value="{{lat::input}}"/><br />
             <input placeholder="longitude" value="{{lng::input}}"/><br />
             <input placeholder="radius (km)" value="{{rad::input}}"/><br />
-            <paper-checkbox checked="{{idle}}">Idle</paper-checkbox><br />
+            <paper-checkbox checked="{{disabled}}">Disable</paper-checkbox><br />
             <geo-query log
-              geofire="[[geofire]]"
-              idle$="[[idle]]"
+              path="/geofire1"
+              data="{{results}}"
               lat="[[lat]]"
               lng="[[lng]]"
               radius="[[rad]]"
-              results-array="{{resultsArray}}"
-              results-object="{{resultsObject}}">
+              disabled="[[disabled]]">
             </geo-query>
-            <div>[[resultsArray.length]] results.</div>
-            <div>Results array:</div>
-            <dom-repeat items="[[resultsArray]]">
-              <template><div>[[_resultToString(item)]]</div></template>
-            </dom-repeat>
-            <br><div>Results object:</div>
-            <dom-repeat items="[[_objectToArray(resultsObject)]]">
-              <template><div>[[_resultToString(item.val)]]</div></template>
-            </dom-repeat>
-            <script>
-              var scope1 = document.getElementById('scope1');
-              scope1.geofire = new GeoFire(geofireDbRef);
-              scope1._resultToString = function(result) { return stringify(result); };
-              scope1._objectToArray = function(obj) { return objectToArray(obj); };
-            </script>
+
+            <p>[[results.length]] results.</p>
+
+            <table>
+              <dom-repeat items="[[results]]">
+                <template>
+                  <tr><td>[[item.location.0]]</td><td>[[item.location.1]]</td><td>[[item.distance]] km</td></tr>
+                </template>
+              </dom-repeat>
+            </table>
           </template>
         </dom-bind>
       </demo-snippet>
-
-      <!--<h3>Demo 2: Using the events</h3>
-      <demo-snippet>
-        <dom-bind id="scope2">
-          <template>
-            <input placeholder="latitude" value="{{lat::input}}"/><br />
-            <input placeholder="longitude" value="{{lng::input}}"/><br />
-            <input placeholder="radius (km)" value="{{rad::input}}"/><br />
-            <paper-checkbox checked="{{idle}}">Idle</paper-checkbox><br />
-            <button on-tap="cancel">Cancel</button><br />
-            <geo-query log
-              id="query"
-              geofire="[[geofire]]"
-              idle$="[[idle]]"
-              lat="[[lat]]"
-              lng="[[lng]]"
-              radius="[[rad]]"
-              on-key-entered="_onKeyEntered"
-              on-key-exited="_onKeyExited"
-              on-key-moved="_onKeyMoved"
-              on-ready="_onReady">
-            </geo-query>
-            <div>[[results.length]] results.</div>
-            <dom-repeat items="[[results]]">
-              <template><div>[[_resultToString(item)]]</div></template>
-            </dom-repeat>
-            <div>Events received:</div>
-            <dom-repeat items="[[events]]">
-              <template><div>[[item]]</div></template>
-            </dom-repeat>
-            <script>
-              var scope2 = document.getElementById('scope2');
-              scope2.geofire = new GeoFire(geofireDbRef);
-              scope2.events = [];
-              scope2._resultToString = function(result) { return stringify(result); };
-              scope2._onKeyEntered = function(key, lat, lng, location, distance) {
-                this.push('events', 'key-entered: ' + key + ' (' + Math.round(distance) + ' km)');
-              };
-              scope2._onKeyExited = function(key, lat, lng, location, distance) {
-                this.push('events', 'key-exited: ' + key + ' (' + Math.round(distance) + ' km)');
-              };
-              scope2._onKeyMoved = function(key, lat, lng, location, distance) {
-                this.push('events', 'key-moved: ' + key + ' (' + Math.round(distance) + ' km)');
-              };
-              scope2._onReady = function() {
-                this.results = this.$.query.resultsArray;
-              };
-              scope2.cancel = function() {
-                this.$.query.cancel();
-              }
-            </script>
-          </template>
-        </dom-bind>
-      </demo-snippet>-->
     </div>
   </body>
 </html>
