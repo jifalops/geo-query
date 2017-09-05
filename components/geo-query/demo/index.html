@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+  <head>
+    <title>geo-query demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../../polymerfire/firebase-app.html">
+    <link rel="import" href="../../polymerfire/firebase-query.html">
+    <link rel="import" href="../../paper-checkbox/paper-checkbox.html">
+
+    <link rel="import" href="../geo-query.html">
+
+    <custom-style>
+      <style include="demo-pages-shared-styles">
+        td {
+          min-width: 6em;
+        }
+      </style>
+    </custom-style>
+  </head>
+  <body>
+    <div class="vertical-section-container centered">
+      <h4>Check the console for additional output.</h4>
+
+      <h3>Demo 1: Using `data` as an array</h3>
+      <demo-snippet>
+        <dom-bind>
+          <template>
+            <firebase-app
+              api-key="AIzaSyD0irm8Cxx8qq1Dg7n07COfbA11_0gUsUc"
+              auth-domain="geo-fire-demo-b0bdf.firebaseapp.com"
+              database-url="https://geo-fire-demo-b0bdf.firebaseio.com">
+            </firebase-app>
+            <firebase-query
+              path="/geofire1"
+              data="{{entries}}">
+            </firebase-query>
+
+            <h4>All entries ([[entries.length]])</h4>
+            <table>
+              <dom-repeat items="[[entries]]">
+                <template>
+                  <tr><td>[[item.l.0]]</td><td>[[item.l.1]]</td></tr>
+                </template>
+              </dom-repeat>
+            </table>
+
+            <h4>Search</h4>
+            <input placeholder="latitude" value="{{lat::input}}"/><br />
+            <input placeholder="longitude" value="{{lng::input}}"/><br />
+            <input placeholder="radius (km)" value="{{rad::input}}"/><br />
+            <paper-checkbox checked="{{disabled}}">Disable</paper-checkbox><br />
+            <geo-query log
+              path="/geofire1"
+              data="{{results}}"
+              lat="[[lat]]"
+              lng="[[lng]]"
+              radius="[[rad]]"
+              disabled="[[disabled]]">
+            </geo-query>
+
+            <p>[[results.length]] results.</p>
+
+            <table>
+              <dom-repeat items="[[results]]">
+                <template>
+                  <tr><td>[[item.location.0]]</td><td>[[item.location.1]]</td><td>[[item.distance]] km</td></tr>
+                </template>
+              </dom-repeat>
+            </table>
+          </template>
+        </dom-bind>
+      </demo-snippet>
+    </div>
+  </body>
+</html>

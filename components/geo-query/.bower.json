@@ -1,0 +1,42 @@
+{
+  "name": "geo-query",
+  "description": "A Polymer web component wrapper for GeoFire's GeoQuery.",
+  "authors": [
+    "Jacob Phillips (https://github.com/jifalops)"
+  ],
+  "license": "MIT",
+  "main": "geo-query.html",
+  "keywords": [
+    "geofire",
+    "geo",
+    "location",
+    "query",
+    "geoquery"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^2.0.0",
+    "geofire": "^4.1.2",
+    "polymerfire": "^2.1.0"
+  },
+  "devDependencies": {
+    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",
+    "web-component-tester": "Polymer/web-component-tester#^6.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0",
+    "paper-checkbox": "^2.0.1",
+    "iron-component-page": "^2.0.0"
+  },
+  "resolutions": {
+    "firebase": "^4.0.0"
+  },
+  "homepage": "https://github.com/jifalops/geo-query",
+  "_release": "19035078c9",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "19035078c90a434268a11078a5e1f5dc675f7315"
+  },
+  "_source": "https://github.com/jifalops/geo-query.git",
+  "_target": "master",
+  "_originalSource": "jifalops/geo-query",
+  "_direct": true
+}
