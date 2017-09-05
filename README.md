@@ -6,7 +6,6 @@ A Polymer web component wrapper for GeoFire's GeoQuery.
 ## Installation
 
 ```
-bower install --save geo-query
 bower i -S geo-query        # Polymer 2.0 hybrid (1.x compatible)
 bower i -S geo-query#0.3.1  # Polymer 1.x based
 ```
@@ -21,35 +20,20 @@ bower i -S geo-query#0.3.1  # Polymer 1.x based
 <!--
 ```
 <custom-element-demo>
-  <template is="dom-bind" id="scope">
+  <template>
     <script src="../webcomponentsjs/webcomponents-lite.js"></script>
     <link rel="import" href="../paper-checkbox/paper-checkbox.html">
     <link rel="import" href="geo-query.html">
-    <div>
-      <dom-bind>
-        <template>
-          <firebase-app
-            api-key="AIzaSyD0irm8Cxx8qq1Dg7n07COfbA11_0gUsUc"
-            auth-domain="geo-fire-demo-b0bdf.firebaseapp.com"
-            database-url="https://geo-fire-demo-b0bdf.firebaseio.com">
-          </firebase-app>
-          <next-code-block></next-code-block>
-          <h4>Search</h4>
-          <input placeholder="latitude" value="{{lat::input}}"/><br />
-          <input placeholder="longitude" value="{{lng::input}}"/><br />
-          <input placeholder="radius (km)" value="{{rad::input}}"/><br />
-          <paper-checkbox checked="{{disabled}}">Disable</paper-checkbox><br />
-          <p>[[results.length]] results.</p>
-          <table>
-            <dom-repeat items="[[results]]">
-              <template>
-                <tr><td>[[item.location.0]]</td><td>[[item.location.1]]</td><td>[[item.distance]] km</td></tr>
-              </template>
-            </dom-repeat>
-          </table>
-        </template>
-      </dom-bind>
-    </div>
+    <firebase-app
+      api-key="AIzaSyD0irm8Cxx8qq1Dg7n07COfbA11_0gUsUc"
+      auth-domain="geo-fire-demo-b0bdf.firebaseapp.com"
+      database-url="https://geo-fire-demo-b0bdf.firebaseio.com">
+    </firebase-app>
+    <dom-bind>
+      <template is="dom-bind">
+        <next-code-block></next-code-block>
+      </template>
+    </dom-bind>
   </template>
 </custom-element-demo>
 ```
@@ -64,7 +48,19 @@ bower i -S geo-query#0.3.1  # Polymer 1.x based
   radius="[[rad]]"
   disabled="[[disabled]]">
 </geo-query>
-
+<h4>Search</h4>
+<input placeholder="latitude" value="{{lat::input}}"/><br />
+<input placeholder="longitude" value="{{lng::input}}"/><br />
+<input placeholder="radius (km)" value="{{rad::input}}"/><br />
+<paper-checkbox checked="{{disabled}}">Disable</paper-checkbox><br />
+<p>[[results.length]] results.</p>
+<table>
+  <dom-repeat items="[[results]]">
+    <template>
+      <tr><td>[[item.lat]]</td><td>[[item.lng]]</td><td>[[item.distance]] km</td></tr>
+    </template>
+  </dom-repeat>
+</table>
 ```
 
 Full demo:
