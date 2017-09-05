@@ -125,9 +125,9 @@
           if (!prev || prev.location[0] != location[0] ||
               prev.location[1] != location[1] || prev.distance != distance) {
             this.log && console.log('key-entered', key, location, distance);
-            this._results[key] = {location, distance};
+            this._results[key] = {location, distance, lat: location[0], lng: location[1]};
             this._updateData();
-            this.fire('key-entered', {key, location, distance});
+            this.fire('key-entered', {key, location, distance, lat: location[0], lng: location[1]});
           }
         });
 
@@ -136,7 +136,7 @@
             this.log && console.log('key-exited', key, location, distance);
             delete this._results[key];
             this._updateData();
-            this.fire('key-exited', {key, location, distance});
+            this.fire('key-exited', {key, location, distance, lat: location[0], lng: location[1]});
           }
         });
 
@@ -145,9 +145,9 @@
           if (!prev || prev.location[0] != location[0] ||
               prev.location[1] != location[1] || prev.distance != distance) {
             this.log && console.log('key-moved', key, location, distance);
-            this._results[key] = {location, distance};
+            this._results[key] = {location, distance, lat: location[0], lng: location[1]};
             this._updateData();
-            this.fire('key-moved', {key, location, distance, prev});
+            this.fire('key-moved', {key, location, distance, lat: location[0], lng: location[1], prev});
           }
         });
 
@@ -161,7 +161,7 @@
         if (!this.asObject) {
           let data = [];
           for (let key of Object.keys(this._results)) {
-            data.push(Object.assign(this._results[key], key))
+            data.push(Object.assign(this._results[key], {key}))
           }
           data.sort((a, b) => {
             return (a.distance < b.distance)
@@ -170,8 +170,10 @@
                 ? 1
                 : 0
           });
+          this.log && console.log('Data:', data);
           this.data = data;
         } else {
+          this.log && console.log('Data:', this._results);
           if (this.data) this.data = {};
           this.data = this._results;
         }
